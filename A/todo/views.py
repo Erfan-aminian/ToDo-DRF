@@ -4,13 +4,17 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import TodoModel
 from .serializers import TodoSerializers
-
+from django.shortcuts import get_object_or_404
 # Create your views here.
 
 class TodoView(APIView):
-    def get(self, request):
-        todo = TodoModel.objects.all()
-        serializers = TodoSerializers(instance=todo, many=True)
+    def get(self, request, pk=None):
+        if pk:
+            todo = get_object_or_404(TodoModel, pk=pk)
+            serializers = TodoSerializers(instance=todo)
+        else:
+            todo = TodoModel.objects.all()
+            serializers = TodoSerializers(instance=todo, many=True)
         return Response(serializers.data, status=status.HTTP_200_OK)
 
 
@@ -21,4 +25,15 @@ class TodoView(APIView):
             return Response(serializers_data.data, status=status.HTTP_201_CREATED)
         return Response(serializers_data.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def put(self, request, pk=None):
+        model_todo = get_object_or_404(TodoModel, pk=pk)
+        serializers = TodoSerializers(instance=model_todo, data= request.POST, partial=True)
+        if serializers.is_valid():
+            serializers.save()
+            return Response(serializers.data, status=status.HTTP_200_OK)
+        return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+    def delete(self, request, pk=None):
+        todo = TodoModel.objects.get(pk=pk)
+        todo.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
