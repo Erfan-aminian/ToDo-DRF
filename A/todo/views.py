@@ -32,8 +32,12 @@ class TodoView(APIView):
             serializers.save()
             return Response(serializers.data, status=status.HTTP_200_OK)
         return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
     def delete(self, request, pk=None):
         todo = TodoModel.objects.get(pk=pk)
+        if todo.user != request.user:
+            return Response({'Permission Denied':'You are not the owner'}, status=status.HTTP_401_UNAUTHORIZED)
         todo.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
